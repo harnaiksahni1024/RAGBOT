@@ -1,0 +1,15 @@
+first create documents for uploading files ---- done
+
+create chunks for uploaded documents ---- done
+
+convert chunks to embeddings --- done
+
+store the embeddings to vector store to retrieve it later--done
+
+create a output parser to get structured answer --done
+
+create a chain where user can ask question and retrievel from vector store can be done 
+
+handle user input to make it efficent
+
+present it through streamlit
