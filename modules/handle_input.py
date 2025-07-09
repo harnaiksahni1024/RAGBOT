@@ -20,10 +20,15 @@ def handle_input(user_question):
     st.session_state.chat_history.append(("HUMAN", user_question))
     st.session_state.chat_history.append(("AI", parsed.answer + f"\n\nConfidence: {parsed.confidence}"))
 
+
+    st.session_state.last_sources = sources
+    
     for speaker,msg in st.session_state.chat_history:
         with st.chat_message("AI" if speaker == "AI" else "HUMAN"):
             st.markdown(msg)
     
+
+      
     contexts = [doc.page_content for doc in sources if doc.page_content.strip() != '']
     if not contexts:
         st.session_state.chat_history.append(("Human", user_question))

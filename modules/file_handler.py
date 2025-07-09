@@ -1,4 +1,4 @@
-from langchain.document_loaders import TextLoader,PyPDFLoader,UnstructuredFileLoader,Docx2txtLoader
+from langchain_community.document_loaders import TextLoader,PyPDFLoader,UnstructuredFileLoader,Docx2txtLoader
 import os
 
 #how to handle files
@@ -13,7 +13,6 @@ def load_pdf_loader(file_path):
     loader = PyPDFLoader(file_path)
     documents = loader.load()
     return documents
-
 
 
 #docx files
@@ -32,13 +31,12 @@ def load_unstructured(file_path):
 
 
 
+import tempfile
 
-#creating a function to save these files in a temporary location
 def save_uploaded_file(uploaded_file):
-    file_path = os.path.join("temp_files",uploaded_file.name)
-    os.makedirs("temp_files",exist_ok=True)
-    with open(file_path,'wb') as f:
-        f.write(uploaded_file.read())
-    return file_path
-
+    suffix = os.path.splitext(uploaded_file.name)[-1]  # Keep the correct file extension
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+    temp_file.write(uploaded_file.read())
+    temp_file.close()
+    return temp_file.name
     

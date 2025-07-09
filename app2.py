@@ -3,13 +3,14 @@ import streamlit as st
 import os
 import shutil
 from dotenv import load_dotenv
-from modules.process_documents import process_documents,count_tokens
-from modules.embedding import get_text_chunks
-from modules.vector_store import get_vector_store,load_embeddings
-from modules.chains import get_conversational_chain
-from modules.handle_input import handle_input
-from modules.evaluation import evaluate_ragas_results
 
+
+
+from modules.handle_input import handle_input
+from modules.process_documents import process_documents,count_tokens
+from modules.embedding import get_vector_store,load_embeddings
+from modules.chain import get_conversational_chain
+from modules.evaluation import evaluate_ragas_results
 
 
 

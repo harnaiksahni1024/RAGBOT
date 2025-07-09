@@ -22,21 +22,20 @@ logging.getLogger("transformers").setLevel(logging.ERROR)
 
 
 def main():
-    st.set_page_config("RAGBOT")
     load_dotenv()
+    st.set_page_config("RAGBOT",layout='centered')
     st.title("Q&A RAGBOT")
+    st.caption("Upload PDF,TXT or DOCX files.The Chatbot will Retrieve and give answer based on content")
+    
+    
     if 'conversation' not in st.session_state:
         st.session_state.conversation= None
     if 'chat_history' not in st.session_state:
         st.session_state.chat_history = []
+    if 'last_sources' not in st.session_state:
+        st.session_state.last_sources = []
 
-
-
-    st.header("Chat with your uploaded file")
-
-
-
-    user_question = st.chat_input("Ask the Question")
+    user_question = st.chat_input("Ask your question here ...")
     if user_question:
         if st.session_state.conversation:
             handle_input(user_question)
@@ -46,36 +45,49 @@ def main():
 
 
     with st.sidebar:
-        st.title("Menu :")
+        st.title("Options and Upload")
+        retrieval_type = st.selectbox('Retrieval Strategy',['mmr','similarity'],index=0)
+        temperature  = st.slider("LLM Temperature",0.0,1.0,0.2)
         upload_docs = st.file_uploader("Upload your file and click on submit",type=['pdf','txt','docx'],accept_multiple_files=True)
         if upload_docs:
-            st.write("Documents Uploaded:")
+            st.success("Documents Uploaded")
             for file in upload_docs:
                 st.markdown(f"{file.name}")
-
-
-
-        with st.expander("Advance Setting for Chunks"):
-            chunk_size = st.slider("Chunk Size",500,2000,1000)
-            chunk_overlap = st.slider("Chunk Overlap",100,400,200)
-
         
 
-
-        if st.button("submit and process") and upload_docs:
+        if st.button("Submit and Process") and upload_docs:
             with st.spinner("Processing ..."):
-                if os.path.exists("faiss_index"):
-                    shutil.rmtree('faiss_index')
-                if os.path.exists("temp_files"):
-                    shutil.rmtree('temp_files')
+                if os.path.exists("Faiss_Index"):
+                    shutil.rmtree('Faiss_Index')
                 
-                chunks = process_documents(upload_docs,chunk_size,chunk_overlap)
+                
+                st.session_state.chat_history = []
+                st.session_state.last_sources = []
+                st.session_state.conversation = None
+                
+                chunks = process_documents(upload_docs,chunk_size=1000,chunk_overlap=200)
                 embeddings = load_embeddings()
                 vector_store = get_vector_store(chunks,embeddings)
-                st.session_state.conversation = get_conversational_chain(vector_store)
+
+                
+                st.session_state.conversation = get_conversational_chain(
+                    vector_store=vector_store,
+                    temperature=temperature,
+                    search_type=retrieval_type
+                    )
+                st.session_state.last_sources = chunks
                 st.success("Documents processed successfully!")
                 total_tokens = sum(count_tokens(chunk.page_content) for chunk in chunks)
                 st.info(f"Total Chunks: {len(chunks)} | Total Tokens: {total_tokens}")
+    
+      # to view Conversation History
+    if st.session_state.chat_history:
+        with st.expander(" View Conversation History"):
+            for speaker, msg in st.session_state.chat_history:
+                st.markdown(f"**{speaker}:** {msg}")
+    
+    
+    
     if st.button("Evaluate your response"):        
         evaluate_ragas_results()
 

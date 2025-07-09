@@ -6,12 +6,12 @@ from langchain.prompts import ChatPromptTemplate,SystemMessagePromptTemplate,Hum
 from langchain_groq import ChatGroq
 import os
 
-from langchain.embeddings import HuggingFaceEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 import streamlit as st
 
 
-def get_conversational_chain(vector_store):
+def get_conversational_chain(vector_store,temperature=0.2,search_type='mmr'):
     system_msg = SystemMessagePromptTemplate.from_template(
     "You are a helpful assistant. "
     "Use ONLY the context below to answer the user's question. "
@@ -28,7 +28,7 @@ def get_conversational_chain(vector_store):
 
     chat_prompt = ChatPromptTemplate.from_messages([system_msg,human_msg]).partial(format_instructions = parser.get_format_instructions())
     
-    llm  = ChatGroq(groq_api_key = os.environ.get("GROQ_API_KEY"),model_name = 'llama3-8b-8192')
+    llm  = ChatGroq(groq_api_key = os.environ.get("GROQ_API_KEY"),model_name = 'llama3-8b-8192',temperature=temperature)
 
     memory= ConversationBufferMemory(memory_key = "chat_history",return_messages=True,output_key='answer')
 
@@ -36,7 +36,7 @@ def get_conversational_chain(vector_store):
         llm=llm,
         memory=memory,
         combine_docs_chain_kwargs={'prompt':chat_prompt},
-        retriever = vector_store.as_retriever(search_type ='mmr',search_kwargs={"k": 3, "score_threshold": 0.6}),
+        retriever = vector_store.as_retriever(search_type =search_type),
         return_source_documents=True
     )
 
